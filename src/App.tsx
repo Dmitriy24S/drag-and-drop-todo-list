@@ -46,7 +46,7 @@ interface DataType {
 function App() {
   const [data, setData] = useState<DataType>(initialData)
 
-  // ! not used mess
+  // ! not used:
   const columns = data.columnOrder.map((columnId) => {
     const column = data.columns[columnId]
     const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
@@ -54,7 +54,6 @@ function App() {
   })
 
   // reorder column
-  // const onDragEnd = (result: any) => {
   const onDragEnd = (result: DropResult) => {
     // document.body.style.color = 'inherit'
     const { destination, source, draggableId } = result
@@ -73,32 +72,96 @@ function App() {
     // onDragEnd source { index: 0, droppableId: 'column-1' }
     // onDragEnd column { id: 'column-1', title: 'Todo', taskIds: Array(4) }
     // onDragEnd newTaskIds(4)['task-1', 'task-2', 'task-3', 'task-4']
-    const column = data.columns[source.droppableId] // 'column-1'
-    console.log('onDragEnd column', column);
+
+    // const column = data.columns[source.droppableId] // 'column-1'
+    const start = data.columns[source.droppableId] // 'column-1'
+    const finish = data.columns[destination.droppableId]
+    console.log('onDragEnd column/start', start);
     // {index: 1, droppableId: 'column-1'}
     console.log('onDragEnd destination', destination);
     // {droppableId: 'column-1', index: 0}
-    const newTaskIds = Array.from(column.taskIds) // avoid mutation? same arr make
-    console.log('onDragEnd newTaskIds', newTaskIds);
 
-    // modify new array:
-    newTaskIds.splice(source.index, 1) // remove 1 item
-    newTaskIds.splice(destination.index, 0, draggableId) // not remove, add item
+    console.log('start', start);
+    console.log('finish', finish);
+    console.log('draggableId', draggableId);
 
-    const newColumn = {
-      ...column,
-      taskIds: newTaskIds
+    // 1. keep original logic move inside 1 column
+    if (start === finish) {
+      const newTaskIds = Array.from(start.taskIds) // avoid mutation? same arr make
+      console.log('onDragEnd newTaskIds', newTaskIds);
+
+      // modify new array:
+      newTaskIds.splice(source.index, 1) // remove 1 item - from start column -> update start column copy
+      newTaskIds.splice(destination.index, 0, draggableId) // 0 - not remove, + add item
+
+      // const newColumn = {
+      const updatedStartColumn = {
+        ...start,
+        taskIds: newTaskIds
+      }
+
+      // update data with reorders items inside column
+      // const newState = {
+      const updatedData = {
+        ...data,
+        columns: {
+          ...data.columns,
+          // [newColumn.id]: newColumn
+          [updatedStartColumn.id]: updatedStartColumn
+        }
+      }
+      setData(updatedData)
+      return
     }
 
-    const newState = {
+    // 2. start and finish columns are different (moving from one column to another):
+
+    // onDragEnd source { index: 0, droppableId: 'column-1' }
+    // onDragEnd column / start { id: 'column-1', title: 'Todo', taskIds: Array(4) }
+    // onDragEnd destination { droppableId: 'column-2', index: 0 }
+
+    const startTasksIds = Array.from(start.taskIds) // avoid mutation? same arr make
+    // console.log('startTasksIds', startTasksIds);
+    // startTasksIds(4)['task-1', 'task-2', 'task-3', 'task-4']
+
+    // remove 1 item - from start column -> update start column copy
+    startTasksIds.splice(source.index, 1)
+    // console.log('startTasksIds after splice', startTasksIds);
+    // startTasksIds after splice(3)['task-2', 'task-3', 'task-4']
+
+    const updatedStartColumn = {
+      ...start,
+      taskIds: startTasksIds
+    }
+    // console.log('updatedStartColumn', updatedStartColumn);
+    // updatedStartColumn { id: 'column-1', title: 'Todo', taskIds: Array(3) }
+
+    const finishTasksIds = Array.from(finish.taskIds)
+    // console.log('finishTasksIds', finishTasksIds);
+    // finishTasksIds ['task-1']
+
+    // insert draggable id (item) into new column:
+    finishTasksIds.splice(destination.index, 0, draggableId)
+
+    // update column
+    const updatedFinishColumn = {
+      ...finish,
+      taskIds: finishTasksIds
+    }
+
+    // update state/data with updated columns: start + finish columnds
+    const updatedData = {
       ...data,
       columns: {
         ...data.columns,
-        [newColumn.id]: newColumn
+        // updatedFinishColumn.id:
+        [updatedFinishColumn.id]: updatedFinishColumn,
+        [updatedStartColumn.id]: updatedStartColumn
       }
     }
 
-    setData(newState)
+    setData(updatedData)
+    return
   }
 
   const onDragStart = () => {

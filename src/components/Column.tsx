@@ -46,7 +46,8 @@ border-radius: 6px;
 background-color: #242424;
 display: flex;
 flex-direction: column;
-min-height: 200px;
+/* min-height: 200px; */
+min-height: 295px;
 `
 
 const Title = styled.h3`
