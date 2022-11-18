@@ -208,6 +208,21 @@ function App() {
     document.body.style.backgroundColor = `rgba(21, 81, 153, ${opacity})`
   }
 
+  const InnerList = ({ data }: { data: DataType }) => {
+    return (
+      <>
+        {
+          data.columnOrder.map((columnId, index) => {
+            const column = data.columns[columnId]
+            const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
+            return <Column key={column.id} column={column} tasks={tasks} index={index} />
+          })
+        }
+      </>
+    )
+  }
+  const MemoInnerList = React.memo(InnerList)
+
   return (
     <div className="App">
       <h1>Todo List</h1>
@@ -223,11 +238,12 @@ function App() {
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              {data.columnOrder.map((columnId, index) => {
+              {/* {data.columnOrder.map((columnId, index) => {
                 const column = data.columns[columnId]
                 const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
                 return <Column key={column.id} column={column} tasks={tasks} index={index} />
-              })}
+              })} */}
+              <MemoInnerList data={data} />
               {provided.placeholder}
             </Container>
           }

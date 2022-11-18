@@ -10,6 +10,19 @@ interface Props {
     index: number
 }
 
+const InnerList = ({ tasks }: { tasks: TaskType[] }) => {
+    console.log('render?');
+    return (
+        <>
+            {tasks.map((task, index) => (
+                <Task key={task.id} task={task} index={index} />
+            ))}
+        </>
+    )
+}
+const MemoInnerList = React.memo(InnerList)
+
+
 const Column = ({ column, tasks, index }: Props) => {
     return (
         <Draggable draggableId={column.id} index={index}>
@@ -28,9 +41,10 @@ const Column = ({ column, tasks, index }: Props) => {
                                 isDraggingOver={snapshot.isDraggingOver}
                                 {...provided.droppableProps}
                             >
-                                {tasks.map((task, index) => {
+                                {/* {tasks.map((task, index) => {
                                     return <Task key={task.id} task={task} index={index} />
-                                })}
+                                })} */}
+                                <MemoInnerList tasks={tasks} />
                                 {provided.placeholder}
                             </TaskList>
                         }
