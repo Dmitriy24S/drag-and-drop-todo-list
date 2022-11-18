@@ -1,5 +1,5 @@
 import React from 'react'
-import { Droppable } from 'react-beautiful-dnd'
+import { Draggable, Droppable } from 'react-beautiful-dnd'
 import styled from 'styled-components'
 import { ColumnsType, TaskType } from '../App'
 import Task from './Task'
@@ -7,27 +7,37 @@ import Task from './Task'
 interface Props {
     column: ColumnsType
     tasks: TaskType[]
+    index: number
 }
 
-const Column = ({ column, tasks }: Props) => {
+const Column = ({ column, tasks, index }: Props) => {
     return (
-        <Container>
-            <Title>{column.title}</Title>
-            <Droppable droppableId={column.id}>
-                {(provided, snapshot) =>
-                    <TaskList
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        isDraggingOver={snapshot.isDraggingOver}
-                    >
-                        {tasks.map((task, index) => {
-                            return <Task key={task.id} task={task} index={index} />
-                        })}
-                        {provided.placeholder}
-                    </TaskList>
-                }
-            </Droppable>
-        </Container>
+        <Draggable draggableId={column.id} index={index}>
+            {(provided) =>
+                <Container
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                >
+                    <Title {...provided.dragHandleProps}>
+                        {column.title}
+                    </Title>
+                    <Droppable droppableId={column.id} type='task'>
+                        {(provided, snapshot) =>
+                            <TaskList
+                                ref={provided.innerRef}
+                                isDraggingOver={snapshot.isDraggingOver}
+                                {...provided.droppableProps}
+                            >
+                                {tasks.map((task, index) => {
+                                    return <Task key={task.id} task={task} index={index} />
+                                })}
+                                {provided.placeholder}
+                            </TaskList>
+                        }
+                    </Droppable>
+                </Container>
+            }
+        </Draggable>
     )
 }
 
@@ -48,6 +58,7 @@ display: flex;
 flex-direction: column;
 /* min-height: 200px; */
 min-height: 295px;
+margin-right: 2rem; // instead of grid parent gap -> fix spacing stutter on column reorder?
 `
 
 const Title = styled.h3`

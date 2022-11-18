@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { Draggable } from 'react-beautiful-dnd'
 import styled from 'styled-components'
 import { TaskType } from '../App'
@@ -14,13 +14,13 @@ const Task = ({ task, index }: Props) => {
         <Draggable draggableId={task.id} index={index}>
             {(provided, snapshot) =>
                 <Container
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
                     ref={provided.innerRef}
                     isDragging={snapshot.isDragging}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
                 >
                     {task.content}
-                    <Handle    {...provided.dragHandleProps} >
+                    <Handle {...provided.dragHandleProps} >
                         <HandleSvg />
                     </Handle>
                 </Container>

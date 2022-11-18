@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { DragDropContext, DragUpdate, DropResult } from 'react-beautiful-dnd'
+import React, { useState } from 'react'
+import { DragDropContext, DragUpdate, Droppable, DropResult } from 'react-beautiful-dnd'
 import styled from 'styled-components'
 import Column from './components/Column'
 import initialData from './data/initialData'
@@ -46,17 +46,20 @@ interface DataType {
 function App() {
   const [data, setData] = useState<DataType>(initialData)
 
-  // ! not used:
+  // ! not used, instead inside return:
   const columns = data.columnOrder.map((columnId) => {
     const column = data.columns[columnId]
     const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
     return column.title
   })
 
-  // reorder column
+  // Reorder items inside column / Reoder/move column
   const onDragEnd = (result: DropResult) => {
     // document.body.style.color = 'inherit'
-    const { destination, source, draggableId } = result
+    const { destination, source, draggableId, type } = result
+    console.log('type', type);
+    // check if dragging column or a task
+
     // outside
     if (!destination) {
       return
@@ -85,6 +88,22 @@ function App() {
     console.log('finish', finish);
     console.log('draggableId', draggableId);
 
+
+    // Reordering of Columns:
+    if (type === 'column') {
+      const newColumnOrder = Array.from(data.columnOrder) // copy of current arr
+      newColumnOrder.splice(source.index, 1) // remove column from old position
+      newColumnOrder.splice(destination.index, 0, draggableId) // insert column in new position
+
+      const updatedColumns = {
+        ...data,
+        columnOrder: newColumnOrder
+      }
+      setData(updatedColumns)
+      return
+    }
+
+    // Reordering of Tasks inside Column:
     // 1. keep original logic move inside 1 column
     if (start === finish) {
       const newTaskIds = Array.from(start.taskIds) // avoid mutation? same arr make
@@ -198,13 +217,21 @@ function App() {
         onDragUpdate={onDragUpdate}
         onDragEnd={onDragEnd}
       >
-        <Container>
-          {data.columnOrder.map((columnId) => {
-            const column = data.columns[columnId]
-            const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
-            return <Column key={column.id} column={column} tasks={tasks} />
-          })}
-        </Container>
+        <Droppable droppableId='all-columns' direction='horizontal' type='column' >
+          {(provided) =>
+            <Container
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {data.columnOrder.map((columnId, index) => {
+                const column = data.columns[columnId]
+                const tasks = column.taskIds.map((taskId) => data.tasks[taskId])
+                return <Column key={column.id} column={column} tasks={tasks} index={index} />
+              })}
+              {provided.placeholder}
+            </Container>
+          }
+        </Droppable>
 
       </DragDropContext >
     </div>
@@ -218,6 +245,6 @@ margin-top: 2rem;
 /* background-color: #242424; */
 /* background-color: #0b0725; */
 display: grid;
-gap:2rem;
+/* gap:2rem; // ! causes spacing stutter on column reorder? */
 grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
 `
